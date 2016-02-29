@@ -1,0 +1,2 @@
+# bitpack
+Generic package manager
