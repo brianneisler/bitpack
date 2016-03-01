@@ -1,0 +1,10 @@
+#development
+docs
+examples
+src
+test
+.editorconfig
+.eslintrc.json
+.packrc
+.travis.yml
+gulpfile.js
