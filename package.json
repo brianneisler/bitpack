@@ -33,7 +33,7 @@
         "gulp-babel": "^6.1.1",
         "gulp-eslint": "^1.1.1",
         "gulp-jest-iojs": "^1.0.3",
-        "gulp-pack": "^0.0.2",
+        "gulp-recipe": "^0.0.2",
         "gulp-sourcemaps": "^1.6.0",
         "gulp-util": "^3.0.7",
         "jest-cli": "^0.7.1"
