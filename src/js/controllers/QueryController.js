@@ -5,8 +5,7 @@
 import {
     Class,
     Map,
-    Obj,
-    Proxy
+    Obj
 } from 'bugcore';
 import {
     PackQueryStore
@@ -121,43 +120,6 @@ const QueryController = Class.extend(Obj, {
         return packQueryStore;
     }
 });
-
-
-//-------------------------------------------------------------------------------
-// Private Static Properties
-//-------------------------------------------------------------------------------
-
-/**
- * @static
- * @private
- * @type {QueryController}
- */
-QueryController.instance        = null;
-
-
-//-------------------------------------------------------------------------------
-// Static Methods
-//-------------------------------------------------------------------------------
-
-/**
- * @static
- * @return {QueryController}
- */
-QueryController.getInstance = function() {
-    if (QueryController.instance === null) {
-        QueryController.instance = new QueryController();
-    }
-    return QueryController.instance;
-};
-
-
-//-------------------------------------------------------------------------------
-// Static Proxy
-//-------------------------------------------------------------------------------
-
-Proxy.proxy(QueryController, Proxy.method(QueryController.getInstance), [
-    'query'
-]);
 
 
 //-------------------------------------------------------------------------------

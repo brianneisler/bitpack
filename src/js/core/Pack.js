@@ -44,12 +44,6 @@ const Pack = Class.extend(Obj, {
          * @type {PackFile}
          */
         this.packFile     = packFile;
-
-        /**
-         * @private
-         * @type {function(function(Error), *)}
-         */
-        this.packMethod       = null;
     },
 
 
@@ -86,13 +80,6 @@ const Pack = Class.extend(Obj, {
     },
 
     /**
-     * @return {function(function(Error), *)}
-     */
-    getPackMethod() {
-        return this.packMethod;
-    },
-
-    /**
      * @return {string}
      */
     getPackPath() {
@@ -112,6 +99,7 @@ const Pack = Class.extend(Obj, {
     getType() {
         return this.packFile.getType();
     },
+
     /**
      * @return {string}
      */
@@ -119,19 +107,11 @@ const Pack = Class.extend(Obj, {
         return this.packFile.getVersion();
     },
 
-
-    //-------------------------------------------------------------------------------
-    // Public Methods
-    //-------------------------------------------------------------------------------
-
     /**
-     * @param {Array.<*>} packArgs
+     * @return {string}
      */
-    runPack(packArgs) {
-        if (!this.packMethod) {
-            this.packMethod = require(path.resolve(this.getPackPath(), this.main));
-        }
-        return this.packMethod.apply(null, packArgs);
+    toCacheKey() {
+        return this.getType() + '@' + this.getPackClass() + '@' + this.getScope() + '@' + this.getName() + '@' + this.getVersion();
     }
 });
 

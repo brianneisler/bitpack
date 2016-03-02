@@ -13,8 +13,7 @@ import {
 } from 'bugcore';
 import firebase from 'Firebase';
 import {
-    ConfigController,
-    ContextController
+    ConfigController
 } from '../controllers';
 import Fireproof from './Fireproof';
 

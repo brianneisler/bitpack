@@ -1,16 +1,13 @@
-'use strict'; //eslint-disable-line strict
-
 //-------------------------------------------------------------------------------
 // Requires
 //-------------------------------------------------------------------------------
 
-const gulp          = require('gulp');
-const babel         = require('gulp-babel');
-const eslint        = require('gulp-eslint');
-const jest          = require('gulp-jest-iojs');
-const recipe        = require('gulp-recipe');
-const sourcemaps    = require('gulp-sourcemaps');
-const util          = require('gulp-util');
+import gulp from 'gulp';
+import babel from 'gulp-babel';
+import eslint from 'gulp-eslint';
+import recipe from 'gulp-recipe';
+import sourcemaps from 'gulp-sourcemaps';
+import util from 'gulp-util';
 
 
 //-------------------------------------------------------------------------------
@@ -21,6 +18,11 @@ const sources = {
     babel: [
         'src/**',
         '!**/tests/**'
+    ],
+    eslint: [
+        '**/*.js',
+        '!dist/**',
+        '!node_modules/**'
     ]
 };
 
@@ -50,10 +52,7 @@ gulp.task('babel', function() {
         });
 });
 
-gulp.task('lint', recipe.get('eslint', [
-    'src/**/*.js',
-    '!node_modules/**'
-]));
+gulp.task('lint', recipe.get('eslint', sources.eslint));
 
 gulp.task('test', ['lint']);
 
@@ -70,7 +69,7 @@ gulp.task('lint-watch', function() {
     const lintAndPrint = eslint();
     lintAndPrint.pipe(eslint.formatEach());
 
-    return gulp.watch('src/**/*.js', function(event) {
+    return gulp.watch(sources.eslint, function(event) {
         if (event.type !== 'deleted') {
             gulp.src(event.path)
                 .pipe(lintAndPrint, {end: false})

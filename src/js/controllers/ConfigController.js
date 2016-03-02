@@ -294,6 +294,47 @@ ConfigController.TARGET_WEIGHT = {
 
 
 //-------------------------------------------------------------------------------
+// Private Static Properties
+//-------------------------------------------------------------------------------
+
+/**
+ * @static
+ * @private
+ * @type {ConfigController}
+ */
+ConfigController.instance        = null;
+
+
+//-------------------------------------------------------------------------------
+// Static Methods
+//-------------------------------------------------------------------------------
+
+/**
+ * @static
+ * @return {ConfigController}
+ */
+ConfigController.getInstance = function() {
+    if (ConfigController.instance === null) {
+        ConfigController.instance = new ConfigController();
+    }
+    return ConfigController.instance;
+};
+
+
+//-------------------------------------------------------------------------------
+// Static Proxy
+//-------------------------------------------------------------------------------
+
+Proxy.proxy(ConfigController, Proxy.method(ConfigController.getInstance), [
+    'deleteConfigProperty',
+    'getConfigProperty',
+    'loadConfigChain',
+    'setConfigProperty',
+    'updateConfigOverrides'
+]);
+
+
+//-------------------------------------------------------------------------------
 // Exports
 //-------------------------------------------------------------------------------
 

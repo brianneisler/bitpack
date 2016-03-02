@@ -10,6 +10,9 @@ import {
     Throwables
 } from 'bugcore';
 import {
+    ConfigController
+} from '../controllers';
+import {
     AuthData,
     CurrentUser,
     UserData
@@ -58,12 +61,6 @@ const AuthController = Class.extend(Obj, {
 
         /**
          * @private
-         * @type {ConfigController}
-         */
-        this.configController               = null;
-
-        /**
-         * @private
          * @type {ContextController}
          */
         this.contextController              = null;
@@ -79,22 +76,6 @@ const AuthController = Class.extend(Obj, {
     //-------------------------------------------------------------------------------
     // Getters and Setters
     //-------------------------------------------------------------------------------
-
-    /**
-     * @return {ConfigController}
-     */
-    getConfigController() {
-        return this.configController;
-    },
-
-    /**
-     * @param {ConfigController} configController
-     * @return {AuthController}
-     */
-    setConfigController(configController) {
-        this.configController = configController;
-        return this;
-    },
 
     /**
      * @return {ContextController}
@@ -250,7 +231,7 @@ const AuthController = Class.extend(Obj, {
      */
     async authWithToken(contextChain, token) {
         const data = await Firebase.authWithCustomToken(contextChain, token);
-        if (this.configController.getProperty(contextChain, 'debug')) {
+        if (ConfigController.getProperty(contextChain, 'debug')) {
             await this.authDebugWithAuthData(contextChain, data);
         }
         return new AuthData(data);
@@ -318,7 +299,7 @@ const AuthController = Class.extend(Obj, {
      * @returns {{deleted: boolean, exists: boolean, key: *, value: *}}
      */
     async deleteAuthData(contextChain) {
-        return this.configController.deleteConfigProperty(contextChain, 'auth');
+        return await ConfigController.deleteConfigProperty(contextChain, 'auth');
     },
 
     /**
@@ -366,7 +347,7 @@ const AuthController = Class.extend(Obj, {
      * @return {AuthData}
      */
     async loadAuthData(contextChain) {
-        const data = await this.configController.getConfigProperty(contextChain, 'auth');
+        const data = await ConfigController.getConfigProperty(contextChain, 'auth');
         if (!data) {
             throw Throwables.exception('NoAuthFound');
         }
@@ -389,7 +370,7 @@ const AuthController = Class.extend(Obj, {
      * @param {AuthData} authData
      */
     async saveAuthData(contextChain, authData) {
-        await this.configController.setConfigProperty(contextChain, 'auth', authData.toObject());
+        await ConfigController.setConfigProperty(contextChain, 'auth', authData.toObject());
     },
 
     /**
