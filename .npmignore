@@ -7,4 +7,5 @@ test
 .eslintrc.json
 .packrc
 .travis.yml
+.babelrc
 gulpfile.js

@@ -6,7 +6,6 @@ import {
     Class
 } from 'bugcore';
 import Entity from './Entity';
-import _ from 'lodash';
 
 
 //-------------------------------------------------------------------------------
