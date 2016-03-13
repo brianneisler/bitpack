@@ -139,13 +139,14 @@ const EntityManager = Class.extend(Obj, {
      * @return {Promise<Entity>}
      */
     set(contextChain, pathData, rawData) {
-        const path      = this.generatePath(contextChain, pathData);
-        const entity    = this.generateEntity(contextChain, path, null);
-        return entity
-            .proof()
-            .set(rawData)
-            .then(() => {
-                return this.addCache(entity);
+        return this.get(contextChain, pathData)
+            .then((entity) => {
+                return entity
+                    .proof()
+                    .set(rawData)
+                    .then(() => {
+                        return entity;
+                    });
             });
     },
 
@@ -157,13 +158,14 @@ const EntityManager = Class.extend(Obj, {
      * @return {Promise<Entity>}
      */
     update(contextChain, pathData, updates) {
-        const path      = this.generatePath(contextChain, pathData);
-        const entity    = this.generateEntity(contextChain, path, null);
-        return entity
-            .proof()
-            .update(updates)
-            .then(() => {
-                return this.addCache(entity);
+        return this.get(contextChain, pathData)
+            .then((entity) => {
+                return entity
+                    .proof()
+                    .update(updates)
+                    .then(() => {
+                        return entity;
+                    });
             });
     },
 
@@ -220,10 +222,7 @@ const EntityManager = Class.extend(Obj, {
         if (!value) {
             return getMethod()
                 .then((entity) => {
-                    if (entity.hasData()) {
-                        return this.addCache(entity);
-                    }
-                    return null;
+                    return this.addCache(entity);
                 });
         }
         return Promise.resolve(value);

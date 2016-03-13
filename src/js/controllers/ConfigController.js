@@ -17,6 +17,9 @@ import {
     PackConfig,
     PackConfigChain
 } from '../config';
+import {
+    TokenUtil
+} from '../util';
 import _ from 'lodash';
 
 
@@ -238,11 +241,10 @@ const ConfigController = Class.extend(Obj, {
      * @return {Object}
      */
     getConfigDefaults(contextChain) {
-        return _.reduce(ConfigController.BUILT_IN_DEFAULTS, (result, value, key) => {
-            return _.assign(result, {
-                [key]: TypeUtil.isString(value) ? this.replaceTokens(value, { home: this.getHomeDir(contextChain), type: this.getPackType(contextChain) }) : value
-            });
-        }, {});
+        return TokenUtil.replace(ConfigController.BUILT_IN_DEFAULTS, {
+            home: this.getHomeDir(contextChain),
+            type: this.getPackType(contextChain)
+        });
     },
 
     /**
@@ -308,7 +310,7 @@ const ConfigController = Class.extend(Obj, {
  * @type {{debug: boolean, firebaseUrl: string, prefix: string, serverUrl: string}}
  */
 ConfigController.BUILT_IN_DEFAULTS  = {
-    cache: '{home}/.{type}',
+    cache: '{home}/.bitpack',
     debug: false,
     firebaseUrl: 'https://bitpack.firebaseio.com',
     prefix: '/usr/local',

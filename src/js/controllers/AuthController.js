@@ -173,7 +173,7 @@ const AuthController = Class.extend(Obj, {
         const authData              = await this.authWithPassword(contextChain, email, password);
         const currentUser           = await this.buildCurrentUserWithAuthData(contextChain, authData);
         await this.saveAuthData(contextChain, currentUser.getAuthData());
-        const loadedCurrentUser     = this.loadCurrentUser(contextChain);
+        const loadedCurrentUser     = await this.loadCurrentUser(contextChain);
         return this.establishCurrentUser(contextChain, loadedCurrentUser);
     },
 
@@ -214,9 +214,9 @@ const AuthController = Class.extend(Obj, {
             signedUp: false,
             username: ''
         };
-        const userEntity = await UserManager.set(contextChain, { userId: firebaseUser.uid },  userData);
+        const userEntity = await UserManager.set(contextChain, { userId: firebaseUser.uid }, userData);
         await this.completeSignupWithUsernameAndEmail(contextChain, userEntity, username, email);
-        const currentUser = await this.buildCurrentUserWithAuthDataAndUserEntity(authData, userEntity);
+        const currentUser = this.buildCurrentUserWithAuthDataAndUserEntity(authData, userEntity);
         await this.saveAuthData(contextChain, currentUser.getAuthData());
         const loadedCurrentUser = await this.loadCurrentUser(contextChain);
         return this.establishCurrentUser(contextChain, loadedCurrentUser);
@@ -291,7 +291,7 @@ const AuthController = Class.extend(Obj, {
      */
     async buildCurrentUserWithAuthData(contextChain, authData) {
         const userEntity = await UserManager.get(contextChain, { userId: authData.getUid() });
-        if (!userEntity) {
+        if (!userEntity.hasData()) {
             throw Throwables.exception('UserDoesNotExist', {}, 'User with uid "' + authData.getUid() + '" does not exist');
         }
         return this.buildCurrentUserWithAuthDataAndUserEntity(authData, userEntity);
@@ -410,7 +410,7 @@ const AuthController = Class.extend(Obj, {
      */
     async loadCurrentUser(contextChain) {
         const authData = await this.loadAuthData(contextChain);
-        return this.buildCurrentUserWithAuthData(contextChain, authData);
+        return await this.buildCurrentUserWithAuthData(contextChain, authData);
     },
 
     /**
@@ -442,7 +442,7 @@ const AuthController = Class.extend(Obj, {
         try {
             const loadedCurrentUser     = await this.loadCurrentUser(contextChain);
             const authData              = await this.authWithToken(contextChain, loadedCurrentUser.getAuthToken());
-            return this.buildCurrentUserWithAuthData(contextChain, authData);
+            return await this.buildCurrentUserWithAuthData(contextChain, authData);
         } catch(throwable) {
             if (throwable.type === 'NoAuthFound') {
                 return null;

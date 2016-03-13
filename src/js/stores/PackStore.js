@@ -134,7 +134,11 @@ const PackStore = Class.extend(Obj, {
      */
     async doLoadPack(packType, packClass, packScope, packName, packVersionNumber) {
         const packFilePath = PathUtil.resolvePackFilePath(this.execDir, packType, packClass, packScope, packName, packVersionNumber);
-        const packFile = await this.packFileStore.loadPackFile(packFilePath);
+        const packFile = await this.packFileStore.loadPackFile(packFilePath, {
+            class: packClass,
+            scope: packScope,
+            type: packType
+        });
         if (!packFile) {
             throw Throwables.exception('PackDoesNotExist');
         }

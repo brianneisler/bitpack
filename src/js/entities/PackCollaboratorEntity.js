@@ -29,28 +29,28 @@ const PackCollaboratorEntity = Class.extend(Entity, {
      * @return {number}
      */
     getCreatedAt() {
-        return this.getRawData().createdAt;
+        return this.getData('createdAt');
     },
 
     /**
      * @return {boolean}
      */
     getOwner() {
-        return this.getRawData().owner;
+        return this.getData('owner');
     },
 
     /**
      * @return {string}
      */
     getUserId() {
-        return this.getRawData().userId;
+        return this.getData('userId');
     },
 
     /**
      * @return {number}
      */
     getUpdatedAt() {
-        return this.getRawData().updatedAt;
+        return this.getData('updatedAt');
     }
 });
 

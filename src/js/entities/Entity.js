@@ -7,6 +7,7 @@ import {
     IObjectable,
     ObjectUtil
 } from 'bugcore';
+import _ from 'lodash';
 import Firebase from '../util/Firebase';
 
 
@@ -78,6 +79,14 @@ const Entity = Class.extend(Firebase, {
      */
     getRawData() {
         return this.rawData;
+    },
+
+    /**
+     * @param {string} path
+     * @return {*}
+     */
+    getData(path) {
+        return _.get(this.rawData, path);
     },
 
 

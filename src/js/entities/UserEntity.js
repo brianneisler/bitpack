@@ -29,21 +29,21 @@ const UserEntity = Class.extend(Entity, {
      * @return {string}
      */
     getEmail() {
-        return this.getRawData().email;
+        return this.getData('email');
     },
 
     /**
      * @return {string}
      */
     getId() {
-        return this.getRawData().id;
+        return this.getData('id');
     },
 
     /**
      * @return {string}
      */
     getUsername() {
-        return this.getRawData().username;
+        return this.getData('username');
     }
 });
 

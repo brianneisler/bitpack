@@ -7,10 +7,11 @@ import {
     ObjectUtil,
     Proxy
 } from 'bugcore';
+import _ from 'lodash';
 import { EntityManager } from './';
 import { PackVersionEntity } from '../entities';
 import { SemanticVersionField } from '../fields';
-import { Firebase } from '../util';
+import { Firebase, FirebaseMulti } from '../util';
 
 
 //-------------------------------------------------------------------------------
@@ -86,11 +87,11 @@ const PackVersionManager = Class.extend(EntityManager, {
      */
     updatePublished(contextChain, pathData, data) {
         const pathParts = this.generatePathParts(pathData);
-        const updates = {
-            [pathParts.concat(['versions', Firebase.escapePathPart(pathData.versionNumber)]).join('/')]: data,
-            [pathParts.concat(['versionsInfo', 'last']).join('/')]: pathData.versionNumber,
-            [pathParts.concat(['versionsInfo', 'all', Firebase.escapePathPart(pathData.versionNumber)])]: pathData.versionNumber
-        };
+        const updates = FirebaseMulti
+            .update(pathParts.concat(['versions', pathData.versionNumber]), data)
+            .set(pathParts.concat(['versionsInfo', 'last']),  pathData.versionNumber)
+            .set(pathParts.concat(['versionsInfo', 'all', pathData.versionNumber]), pathData.versionNumber)
+            .build();
         return Firebase
             .proof(contextChain, [])
             .update(updates);

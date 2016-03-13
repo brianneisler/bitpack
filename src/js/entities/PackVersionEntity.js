@@ -6,6 +6,7 @@ import {
     Class
 } from 'bugcore';
 import Entity from './Entity';
+import _ from 'lodash';
 
 
 //-------------------------------------------------------------------------------
@@ -29,21 +30,21 @@ const PackVersionEntity = Class.extend(Entity, {
      * @return {number}
      */
     getCreatedAt() {
-        return this.getRawData().createdAt;
+        return this.getData('createdAt');
     },
 
     /**
      * @return {boolean}
      */
     getPublished() {
-        return this.getRawData().published;
+        return this.getData('published');
     },
 
     /**
      * @return {string}
      */
     getPackUrl() {
-        return this.getRawData().packUrl;
+        return this.getData('packUrl');
     },
 
     /**
@@ -58,21 +59,21 @@ const PackVersionEntity = Class.extend(Entity, {
      * }}
      */
     getSemanticVersion() {
-        return this.getRawData().semanticVersion;
+        return this.getData('semanticVersion');
     },
 
     /**
      * @return {number}
      */
     getUpdatedAt() {
-        return this.getRawData().updatedAt;
+        return this.getData('updatedAt');
     },
 
     /**
      * @return {string}
      */
     getVersionNumber() {
-        return this.getRawData().versionNumber;
+        return this.getData('versionNumber');
     }
 });
 

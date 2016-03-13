@@ -29,35 +29,35 @@ const PackEntity = Class.extend(Entity, {
      * @return {number}
      */
     getCreatedAt() {
-        return this.getRawData().createdAt;
+        return this.getData('createdAt');
     },
 
     /**
      * @return {string}
      */
     getName() {
-        return this.getRawData().name;
+        return this.getData('name');
     },
 
     /**
      * @return {string}
      */
     getScope() {
-        return this.getRawData().scope;
+        return this.getData('scope');
     },
 
     /**
      * @return {string}
      */
     getType() {
-        return this.getRawData().type;
+        return this.getData('type');
     },
 
     /**
      * @return {number}
      */
     getUpdatedAt() {
-        return this.getRawData().updatedAt;
+        return this.getData('updatedAt');
     }
 });
 

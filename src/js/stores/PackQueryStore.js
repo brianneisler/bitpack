@@ -113,11 +113,11 @@ const PackQueryStore = Class.extend(Obj, {
             throw Throwables.exception('NoVersionMatch', {}, 'Cannot find a version match for "' + packQuery + '"');
         }
         return new QueryResultData({
-            class: packQueryData.packClass,
-            name: packQueryData.packName,
-            scope: packQueryData.packScope,
-            type: packQueryData.packtType,
-            versionNumber
+            packClass: packQueryData.packClass,
+            packName: packQueryData.packName,
+            packScope: packQueryData.packScope,
+            packType: packQueryData.packType,
+            packVersionNumber: versionNumber
         });
     },
 
@@ -146,7 +146,7 @@ const PackQueryStore = Class.extend(Obj, {
      *      packClass: string,
      *      packName: string,
      *      packScope: string,
-     *      packtType: string,
+     *      packType: string,
      *      versionQuery: string
      * }}
      */

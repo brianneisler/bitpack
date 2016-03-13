@@ -262,11 +262,12 @@ const PackController = Class.extend(Obj, {
     },
 
     /**
+     * @param {ContextChain} contextChain
      * @param {string} packPath
      * @return {PackPackage}
      */
-    packagePack(packPath) {
-        return PackPackage.fromPath(packPath);
+    async packagePack(contextChain, packPath) {
+        return await PackPackage.fromPath(contextChain.getPackTypeContext().getPackType(), packPath);
     },
 
     /**
@@ -280,9 +281,9 @@ const PackController = Class.extend(Obj, {
     async publishPack(contextChain, packType, packClass, packScope, packPath) {
         const packFile = await this.loadPackFile(packPath, packType, packClass, packScope);
         await this.validateNewPack(contextChain, packFile);
-        const packPackage = await this.packagePack(packPath);
+        const packPackage = await this.packagePack(contextChain, packPath);
         await this.verifyCurrentUserAccessToPack(contextChain, packFile.getType(), packFile.getPackClass(), packFile.getScope(), packFile.getName());
-        await this.ensurePackEntityCreated(contextChain, packFile.getType(), packFile.getPackClass(), packFile.getScope(), packFile.getName());
+        await this.ensurePackEntityCreated(contextChain, packFile);
         const packVersionEntity = await this.ensurePackVersionEntityCreated(contextChain, packFile);
         const publishKeyEntity = await this.createPublishKey(contextChain, packFile, packPackage, packVersionEntity);
         console.log('publishing ' + publishKeyEntity.getPackName() + '@' + publishKeyEntity.getPackVersionNumber());
@@ -305,7 +306,7 @@ const PackController = Class.extend(Obj, {
             packFile.getName(),
             packFile.getVersion()
         );
-        if (entity) {
+        if (entity.hasData()) {
             if (entity.getPublished()) {
                 throw Throwables.exception('PackVersionExists', {}, packFile.getType() + '-' + packFile.getPackClass() + ' ' + packFile.getName() + '@' + packFile.getVersion() + ' has already been published');
             }
@@ -423,16 +424,18 @@ const PackController = Class.extend(Obj, {
     /**
      * @private
      * @param {ContextChain} contextChain
-     * @param {string} packType
-     * @param {string} packClass
-     * @param {string} packScope
-     * @param {string} packName
+     * @param {PackFile} packFile
      * @return {PackEntity}
      */
-    async ensurePackEntityCreated(contextChain, packType, packClass, packScope, packName) {
+    async ensurePackEntityCreated(contextChain, packFile) {
+        const packType = packFile.getType();
+        const packClass = packFile.getPackClass();
+        const packScope = packFile.getScope();
+        const packName = packFile.getName();
         let packEntity = await this.loadPackEntity(contextChain, packType, packClass, packScope, packName);
-        if (!packEntity) {
-            packEntity = await this.createPackEntity({
+        if (!packEntity.hasData()) {
+            packEntity = await this.createPackEntity(contextChain, {
+                class: packClass,
                 name: packName,
                 scope: packScope,
                 type: packType
@@ -481,7 +484,7 @@ const PackController = Class.extend(Obj, {
      */
     async ensurePackVersionEntityCreated(contextChain, packFile) {
         let entity = await this.loadPackVersionEntity(contextChain, packFile.getType(), packFile.getPackClass(), packFile.getScope(), packFile.getName(), packFile.getVersion());
-        if (!entity) {
+        if (!entity.hasData()) {
             entity = await this.createPackVersionEntity(contextChain, packFile.getType(), packFile.getPackClass(), packFile.getScope(), packFile.getName(), packFile.getVersion());
         }
         return entity;

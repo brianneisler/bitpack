@@ -7,6 +7,7 @@ import {
     Obj,
     Promises
 } from 'bugcore';
+import { TokenUtil } from '../util';
 import _ from 'lodash';
 import crypto from 'crypto';
 import fs from 'fs-promise';
@@ -188,8 +189,8 @@ PackPackage.DEFAULT_IGNORES = [
     '.hg',
     '.lock-wscript',
     '.npmrc',
-    '.pack',
-    '.packrc',
+    '.{packType}',
+    '.{packType}rc',
     '.svn',
     '.wafpickle-*',
     'config.gypi',
@@ -202,7 +203,7 @@ PackPackage.DEFAULT_IGNORES = [
  * @static
  * @enum {string}
  */
-PackPackage.IGNORE_FILE_NAME = '.packignore';
+PackPackage.IGNORE_FILE_NAME = '.{packType}ignore';
 
 
 //-------------------------------------------------------------------------------
@@ -211,11 +212,12 @@ PackPackage.IGNORE_FILE_NAME = '.packignore';
 
 /**
  * @static
+ * @param {string} packType
  * @param {string} packPath
  * @return {PackPackage}
  */
-PackPackage.fromPath = async function(packPath) {
-    const packagePaths = await this.findPackagePaths(packPath);
+PackPackage.fromPath = async function(packType, packPath) {
+    const packagePaths = await PackPackage.findPackagePaths(packType, packPath);
     const relativePackagePaths = _.map(packagePaths, (packagePath) => {
         return path.relative(packPath, packagePath);
     });
@@ -266,17 +268,34 @@ PackPackage.fromUrl = async function(packUrl) {
 /**
  * @private
  * @static
+ * @param {string} packType
  * @param {string} packPath
  * @return {Array<string>}
  */
-PackPackage.findPackagePaths = async function(packPath) {
+PackPackage.findPackagePaths = async function(packType, packPath) {
     const packPaths = await PackPackage.walkPackPath(packPath);
-    const ignoreFilePath = path.resolve(packPath, PackPackage.IGNORE_FILE_NAME);
+    const ignoreFilePath = path.resolve(packPath, PackPackage.getIgnoreFileName(packType));
     const ignoreFile = ignore.select([ignoreFilePath]);
     return ignore()
         .addIgnoreFile(ignoreFile)
-        .addPattern(PackPackage.DEFAULT_IGNORES)
+        .addPattern(PackPackage.getDefaultIgnores(packType))
         .filter(packPaths);
+};
+
+/**
+ * @static
+ * @return {string}
+ */
+PackPackage.getDefaultIgnores = function(packType) {
+    return TokenUtil.replace(PackPackage.DEFAULT_IGNORES, { packType });
+};
+
+/**
+ * @static
+ * @return {string}
+ */
+PackPackage.getIgnoreFileName = function(packType) {
+    return TokenUtil.replaceString(PackPackage.IGNORE_FILE_NAME, { packType });
 };
 
 /**

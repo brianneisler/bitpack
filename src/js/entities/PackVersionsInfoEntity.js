@@ -61,28 +61,28 @@ const PackVersionsInfoEntity = Class.extend(Entity, {
      * @return {Object.<string, string>}
      */
     getAll() {
-        return this.getRawData().all;
+        return this.getData('all');
     },
 
     /**
      * @return {number}
      */
     getCreatedAt() {
-        return this.getRawData().createdAt;
+        return this.getData('createdAt');
     },
 
     /**
      * @return {string}
      */
     getLast() {
-        return this.getRawData().last;
+        return this.getData('last');
     },
 
     /**
      * @return {number}
      */
     getUpdatedAt() {
-        return this.getRawData().updatedAt;
+        return this.getData('updatedAt');
     }
 });
 

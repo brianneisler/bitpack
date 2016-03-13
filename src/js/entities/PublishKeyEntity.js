@@ -29,63 +29,70 @@ const PublishKeyEntity = Class.extend(Entity, {
      * @return {number}
      */
     getCreatedAt() {
-        return this.getRawData().createdAt;
+        return this.getData('createdAt');
     },
 
     /**
      * @return {string}
      */
     getKey() {
-        return this.getRawData().key;
+        return this.getData('key');
+    },
+
+    /**
+     * @return {string}
+     */
+    getPackClass() {
+        return this.getData('packClass');
     },
 
     /**
      * @return {string}
      */
     getPackHash() {
-        return this.getRawData().packHash;
+        return this.getData('packHash');
     },
 
     /**
      * @return {string}
      */
     getPackName() {
-        return this.getRawData().packName;
+        return this.getData('packName');
     },
 
     /**
      * @return {string}
      */
     getPackScope() {
-        return this.getRawData().packScope;
+        return this.getData('packScope');
     },
 
     /**
      * @return {string}
      */
     getPackType() {
-        return this.getRawData().packType;
+        return this.getData('packType');
     },
 
     /**
      * @return {string}
      */
     getPackVersionNumber() {
-        return this.getRawData().packVersionNumber;
+        return this.getData('packVersionNumber');
     },
 
     /**
      * @return {number}
      */
     getUpdatedAt() {
-        return this.getRawData().updatedAt;
+        return this.getData('updatedAt');
     },
 
     /**
      * @returns {?number}
      */
     getUsedAt() {
-        return this.getRawData().usedAt;
+        return this.getData('usedAt');
     }
 });
 

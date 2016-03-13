@@ -95,6 +95,7 @@ const PackManager = Class.extend(EntityManager, {
      * @protected
      * @param {ContextChain} contextChain
      * @param {{
+     *      packClass: string,
      *      packName: string,
      *      packScope: string,
      *      packType: string
@@ -102,7 +103,7 @@ const PackManager = Class.extend(EntityManager, {
      * @return {string}
      */
     generatePath(contextChain, pathData) {
-        return Firebase.path(contextChain, ['packs', pathData.packType, pathData.packScope, pathData.packName, 'info']);
+        return Firebase.path(contextChain, ['packs', pathData.packType, pathData.packClass, pathData.packScope, pathData.packName, 'info']);
     }
 });
 
