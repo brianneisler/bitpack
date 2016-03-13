@@ -46,6 +46,12 @@ const ContextChain = Class.extend(Obj, {
 
         /**
          * @private
+         * @type {FirebaseContext}
+         */
+        this.firebaseContext    = null;
+
+        /**
+         * @private
          * @type {PackTypeContext}
          */
         this.packTypeContext    = null;
@@ -77,6 +83,23 @@ const ContextChain = Class.extend(Obj, {
      */
     setExecContext(execContext) {
         this.execContext = execContext;
+    },
+
+    /**
+     * @return {FirebaseContext}
+     */
+    getFirebaseContext() {
+        if (!this.firebaseContext) {
+            throw Throwables.exception('NoCurrentContext', {}, 'Must first establishFirebaseContext before getting current context');
+        }
+        return this.firebaseContext;
+    },
+
+    /**
+     * @param {FirebaseContext} firebaseContext
+     */
+    setFirebaseContext(firebaseContext) {
+        this.firebaseContext = firebaseContext;
     },
 
     /**

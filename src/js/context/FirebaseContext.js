@@ -8,7 +8,6 @@ import {
     Throwables,
     TypeUtil
 } from 'bugcore';
-import path from 'path';
 import IContext from './IContext';
 
 
@@ -20,9 +19,9 @@ import IContext from './IContext';
  * @class
  * @extends {Obj}
  */
-const ExecContext = Class.extend(Obj, {
+const FirebaseContext = Class.extend(Obj, {
 
-    _name: 'bitpack.ExecContext',
+    _name: 'pack.FirebaseContext',
 
 
     //-------------------------------------------------------------------------------
@@ -45,25 +44,7 @@ const ExecContext = Class.extend(Obj, {
          * @private
          * @type {string}
          */
-        this.execPath       = '';
-
-        /**
-         * @private
-         * @type {string}
-         */
-        this.modulePath     = '';
-
-        /**
-         * @private
-         * @type {string}
-         */
-        this.target         = '';
-
-        /**
-         * @private
-         * @type {string}
-         */
-        this.userPath       = '';
+        this.firebaseUrl    = '';
     },
 
 
@@ -73,30 +54,18 @@ const ExecContext = Class.extend(Obj, {
 
     /**
      * @param {{
-     *      execPath: string=,
-     *      target: string=
+     *      firebaseUrl: string=
      * }=} options
-     * @return {ExecContext}
+     * @return {FirebaseContext}
      */
     init(options) {
         const _this = this._super();
         if (_this) {
-            if (TypeUtil.isObject(options) && TypeUtil.isString(options.execPath)) {
-                _this.execPath = path.resolve(options.execPath);
+            if (TypeUtil.isObject(options) && TypeUtil.isString(options.firebaseUrl)) {
+                _this.firebaseUrl = options.firebaseUrl;
             } else {
-                _this.execPath = path.resolve(process.cwd());
+                throw Throwables.illegalArgumentBug('options.firebaseUrl', options.firebaseUrl, 'firebaseUrl must be a valid firebase url');
             }
-            if (TypeUtil.isObject(options) && TypeUtil.isString(options.target)) {
-                if (!ExecContext.TARGETS[options.target]) {
-                    throw Throwables.illegalArgumentBug('options.target', options.target, 'target must be a valid target value ["global", "user", "project"]');
-                }
-                _this.target = options.target;
-            } else {
-                _this.target = 'project';
-            }
-
-            _this.modulePath = path.resolve(__dirname, '../../..');
-            _this.userPath = path.resolve(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE);
         }
         return _this;
     },
@@ -109,29 +78,8 @@ const ExecContext = Class.extend(Obj, {
     /**
      * @return {string}
      */
-    getExecPath() {
-        return this.execPath;
-    },
-
-    /**
-     * @return {string}
-     */
-    getModulePath() {
-        return this.modulePath;
-    },
-
-    /**
-     * @return {string}
-     */
-    getTarget() {
-        return this.target;
-    },
-
-    /**
-     * @return {string}
-     */
-    getUserPath() {
-        return this.userPath;
+    getFirebaseUrl() {
+        return this.firebaseUrl;
     },
 
 
@@ -145,12 +93,9 @@ const ExecContext = Class.extend(Obj, {
      * @return {boolean}
      */
     equals(value) {
-        if (Class.doesExtend(value, ExecContext)) {
+        if (Class.doesExtend(value, FirebaseContext)) {
             return (
-                Obj.equals(value.getModulePath(), this.modulePath) &&
-                Obj.equals(value.getExecPath(), this.execPath) &&
-                Obj.equals(value.getTarget(), this.target) &&
-                Obj.equals(value.getUserPath(), this.userPath)
+                Obj.equals(value.getFirebaseUrl(), this.firebaseUrl)
             );
         }
         return false;
@@ -162,11 +107,8 @@ const ExecContext = Class.extend(Obj, {
      */
     hashCode() {
         if (!this._hashCode) {
-            this._hashCode = Obj.hashCode('[ExecContext]' +
-                Obj.hashCode(this.modulePath) + '_' +
-                Obj.hashCode(this.execPath) + '_' +
-                Obj.hashCode(this.target) + '_' +
-                Obj.hashCode(this.userPath));
+            this._hashCode = Obj.hashCode('[FirebaseContext]' +
+                Obj.hashCode(this.firebaseUrl));
         }
         return this._hashCode;
     },
@@ -180,7 +122,7 @@ const ExecContext = Class.extend(Obj, {
      * @return {string}
      */
     toContextKey() {
-        return this.execPath + '-' + this.modulePath + '-' + this.target + '-' + this.userPath;
+        return this.firebaseUrl;
     }
 });
 
@@ -189,26 +131,11 @@ const ExecContext = Class.extend(Obj, {
 // Implement Interfaces
 //-------------------------------------------------------------------------------
 
-Class.implement(ExecContext, IContext);
-
-
-//-------------------------------------------------------------------------------
-// Static Properties
-//-------------------------------------------------------------------------------
-
-/**
- * @static
- * @enum {string}
- */
-ExecContext.TARGETS = {
-    global: 'global',
-    project: 'project',
-    user: 'user'
-};
+Class.implement(FirebaseContext, IContext);
 
 
 //-------------------------------------------------------------------------------
 // Exports
 //-------------------------------------------------------------------------------
 
-export default ExecContext;
+export default FirebaseContext;

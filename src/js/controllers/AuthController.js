@@ -10,9 +10,6 @@ import {
     Throwables
 } from 'bugcore';
 import {
-    ConfigController
-} from '../controllers';
-import {
     AuthData,
     CurrentUser,
     UserData
@@ -61,21 +58,49 @@ const AuthController = Class.extend(Obj, {
 
         /**
          * @private
-         * @type {ContextController}
+         * @type {ConfigController}
          */
-        this.contextController              = null;
+        this.configController                           = null;
 
         /**
          * @private
-         * @type {Map.<ExecContext, CurrentUser>}
+         * @type {ContextController}
          */
-        this.execContextToCurrentUserMap    = new Map();
+        this.contextController                          = null;
+
+        /**
+         * @private
+         * @type {Map<ExecContext, CurrentUser>}
+         */
+        this.execContextToCurrentUserMap                = new Map();
+
+        /**
+         * @private
+         * @type {Map<FirebaseContext, FirebaseTokenGenerator>}
+         */
+        this.firebaseContextToFirebaseTokenGeneratorMap = new Map();
     },
 
 
     //-------------------------------------------------------------------------------
     // Getters and Setters
     //-------------------------------------------------------------------------------
+
+    /**
+     * @return {ConfigController}
+     */
+    getConfigController() {
+        return this.configController;
+    },
+
+    /**
+     * @param {ConfigController} configController
+     * @return {AuthController}
+     */
+    setConfigController(configController) {
+        this.configController = configController;
+        return this;
+    },
 
     /**
      * @return {ContextController}
@@ -94,10 +119,17 @@ const AuthController = Class.extend(Obj, {
     },
 
     /**
-     * @return {Map.<ExecContext, CurrentUser>}
+     * @return {Map<ExecContext, CurrentUser>}
      */
     getExecContextToCurrentUserMap() {
         return this.execContextToCurrentUserMap;
+    },
+
+    /**
+     * @return {Map<FirebaseContext, FirebaseTokenGenerator>}
+     */
+    getFirebaseContextToFirebaseTokenGeneratorMap() {
+        return this.firebaseContextToFirebaseTokenGeneratorMap;
     },
 
 
@@ -219,7 +251,8 @@ const AuthController = Class.extend(Obj, {
      * }} data
      */
     async authDebugWithAuthData(contextChain, data) {
-        const debugToken = FirebaseTokenGenerator.generateDebugTokenWithAuthData(data);
+        const firebaseTokenGenerator = await this.generateFirebaseTokenGenerator(contextChain);
+        const debugToken = firebaseTokenGenerator.generateDebugTokenWithAuthData(data);
         return await Firebase.authWithCustomToken(contextChain, debugToken);
     },
 
@@ -231,7 +264,7 @@ const AuthController = Class.extend(Obj, {
      */
     async authWithToken(contextChain, token) {
         const data = await Firebase.authWithCustomToken(contextChain, token);
-        if (ConfigController.getProperty(contextChain, 'debug')) {
+        if (this.configController.getProperty(contextChain, 'debug')) {
             await this.authDebugWithAuthData(contextChain, data);
         }
         return new AuthData(data);
@@ -299,7 +332,7 @@ const AuthController = Class.extend(Obj, {
      * @returns {{deleted: boolean, exists: boolean, key: *, value: *}}
      */
     async deleteAuthData(contextChain) {
-        return await ConfigController.deleteConfigProperty(contextChain, 'auth');
+        return await this.configController.deleteConfigProperty(contextChain, 'auth');
     },
 
     /**
@@ -344,10 +377,26 @@ const AuthController = Class.extend(Obj, {
     /**
      * @private
      * @param {ContextChain} contextChain
+     * @return {FirebaseTokenGenerator}
+     */
+    async generateFirebaseTokenGenerator(contextChain) {
+        const firebaseContext = contextChain.getFirebaseContext();
+        let firebaseTokenGenerator      = this.firebaseContextToFirebaseTokenGeneratorMap.get(firebaseContext);
+        if (!firebaseTokenGenerator) {
+            const firebaseSecret            = await this.configController.getConfigProperty(contextChain, 'firebaseSecret');
+            firebaseTokenGenerator          = new FirebaseTokenGenerator(firebaseSecret);
+            this.firebaseContextToFirebaseTokenGeneratorMap.put(firebaseContext, firebaseTokenGenerator);
+        }
+        return firebaseTokenGenerator;
+    },
+
+    /**
+     * @private
+     * @param {ContextChain} contextChain
      * @return {AuthData}
      */
     async loadAuthData(contextChain) {
-        const data = await ConfigController.getConfigProperty(contextChain, 'auth');
+        const data = await this.configController.getConfigProperty(contextChain, 'auth');
         if (!data) {
             throw Throwables.exception('NoAuthFound');
         }
@@ -370,7 +419,7 @@ const AuthController = Class.extend(Obj, {
      * @param {AuthData} authData
      */
     async saveAuthData(contextChain, authData) {
-        await ConfigController.setConfigProperty(contextChain, 'auth', authData.toObject());
+        await this.configController.setConfigProperty(contextChain, 'auth', authData.toObject());
     },
 
     /**

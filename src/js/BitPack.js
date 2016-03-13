@@ -66,7 +66,7 @@ const BitPack = Class.extend(Obj, {
          * @private
          * @type {ConfigController}
          */
-        this.configController   = ConfigController.getInstance();
+        this.configController   = new ConfigController();
 
         /**
          * @private
@@ -105,6 +105,7 @@ const BitPack = Class.extend(Obj, {
         const _this = this._super();
         if (_this) {
             _this.authController
+                .setConfigController(this.configController)
                 .setContextController(this.contextController);
 
             _this.queryController
@@ -112,6 +113,7 @@ const BitPack = Class.extend(Obj, {
 
             _this.packController
                 .setAuthController(this.authController)
+                .setConfigController(this.configController)
                 .setQueryController(this.queryController);
 
         }
@@ -181,7 +183,7 @@ const BitPack = Class.extend(Obj, {
      */
     configure(configObject) {
         if (TypeUtil.isObject(configObject)) {
-            return ConfigController.updateConfigOverrides(configObject);
+            return this.configController.updateConfigOverrides(configObject);
         }
         throw Throwables.illegalArgumentBug('configObject', configObject, 'must be an object');
     },
@@ -198,7 +200,7 @@ const BitPack = Class.extend(Obj, {
             target: 'project'
         });
         const contextChain = await this.context(options);
-        return await ConfigController.deleteConfigProperty(contextChain, key);
+        return await this.configController.deleteConfigProperty(contextChain, key);
     },
 
     /**
@@ -213,7 +215,7 @@ const BitPack = Class.extend(Obj, {
             target: 'project'
         });
         const contextChain = await this.context(options);
-        return await ConfigController.getConfigProperty(contextChain, key);
+        return await this.configController.getConfigProperty(contextChain, key);
     },
 
     /**
@@ -228,7 +230,7 @@ const BitPack = Class.extend(Obj, {
             target: 'project'
         });
         const contextChain = await this.context(options);
-        return await ConfigController.setConfigProperty(contextChain, key, value);
+        return await this.configController.setConfigProperty(contextChain, key, value);
     },
 
     /**
@@ -244,7 +246,10 @@ const BitPack = Class.extend(Obj, {
             packType: this.packType
         });
         this.contextController.establishExecContext(contextChain, options);
-        await ConfigController.loadConfigChain(contextChain);
+        const configChain = await this.configController.loadConfigChain(contextChain);
+        this.contextController.establishFirebaseContext(contextChain, {
+            firebaseUrl: configChain.getProperty('firebaseUrl')
+        });
         await this.authController.auth(contextChain);
         return contextChain;
     },

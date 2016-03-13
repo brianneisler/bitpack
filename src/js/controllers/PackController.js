@@ -13,9 +13,6 @@ import {
 import npm from 'npm';
 import request from 'request';
 import {
-    ConfigController
-} from '../controllers';
-import {
     PackPackage
 } from '../core';
 import {
@@ -81,6 +78,12 @@ const PackController = Class.extend(Obj, {
 
         /**
          * @private
+         * @type {ConfigController}
+         */
+        this.configController               = null;
+
+        /**
+         * @private
          * @type {Map.<string, PackStore>}
          */
         this.execDirToPackStoreMap          = new Map();
@@ -130,6 +133,22 @@ const PackController = Class.extend(Obj, {
      */
     getCacheDirToPackDownloadStoreMap() {
         return this.cacheDirToPackDownloadStore;
+    },
+
+    /**
+     * @return {ConfigController}
+     */
+    getConfigController() {
+        return this.configController;
+    },
+
+    /**
+     * @param {ConfigController} configController
+     * @return {PackController}
+     */
+    setConfigController(configController) {
+        this.configController = configController;
+        return this;
     },
 
     /**
@@ -376,8 +395,8 @@ const PackController = Class.extend(Obj, {
      */
     async doPackInstall(contextChain, packType, packClass, packScope, packName, packVersionNumber) {
         const config = await Promises.props({
-            cache: ConfigController.getConfigProperty(contextChain, 'cache'),
-            firebaseUrl: ConfigController.getConfigProperty(contextChain, 'firebaseUrl')
+            cache: this.configController.getConfigProperty(contextChain, 'cache'),
+            firebaseUrl: this.configController.getConfigProperty(contextChain, 'firebaseUrl')
         });
         const packVersionEntity = await this.loadPackVersionEntity(contextChain, packType, packClass, packScope, packName, packVersionNumber);
         if (!packVersionEntity) {
@@ -589,8 +608,8 @@ const PackController = Class.extend(Obj, {
      */
     uploadPackPackage(contextChain, packPackage, publishKeyEntity) {
         return Promises.props({
-            debug: ConfigController.getConfigProperty(contextChain, 'debug'),
-            serverUrl: ConfigController.getConfigProperty(contextChain, 'serverUrl')
+            debug: this.configController.getConfigProperty(contextChain, 'debug'),
+            serverUrl: this.configController.getConfigProperty(contextChain, 'serverUrl')
         }).then((config) => {
             return Promises.promise((resolve, reject) => {
                 console.log('uploading to ', config.serverUrl + '/api/v1/publish');

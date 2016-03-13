@@ -10,6 +10,7 @@ import {
 import {
     ContextChain,
     ExecContext,
+    FirebaseContext,
     PackTypeContext,
     UserContext
 } from '../context';
@@ -52,6 +53,12 @@ const ContextController = Class.extend(Obj, {
 
         /**
          * @private
+         * @type {Map<string, FirebaseContext>}
+         */
+        this.contextKeyToFirebaseContextMap     = Collections.map();
+
+        /**
+         * @private
          * @type {Map<string, PackTypeContext>}
          */
         this.contextKeyToPackTypeContextMap     = Collections.map();
@@ -73,6 +80,13 @@ const ContextController = Class.extend(Obj, {
      */
     getContextKeyToExecContextMap() {
         return this.contextKeyToExecContextMap;
+    },
+
+    /**
+     * @return {Map<string, FirebaseContext>}
+     */
+    getContextKeyToFirebaseContextMap() {
+        return this.contextKeyToFirebaseContextMap;
     },
 
     /**
@@ -111,6 +125,25 @@ const ContextController = Class.extend(Obj, {
             context = this.contextKeyToExecContextMap.get(contextKey);
         }
         contextChain.setExecContext(context);
+        return contextChain;
+    },
+
+    /**
+     * @param {ContextChain} contextChain
+     * @param {{
+     *      firebaseUrl: string
+     * }=} options
+     * @return {ContextChain}
+     */
+    establishFirebaseContext(contextChain, options) {
+        let context = new FirebaseContext(options);
+        const contextKey = context.toContextKey();
+        if (!this.contextKeyToFirebaseContextMap.containsKey(contextKey)) {
+            this.contextKeyToFirebaseContextMap.put(contextKey, context);
+        } else {
+            context = this.contextKeyToFirebaseContextMap.get(contextKey);
+        }
+        contextChain.setFirebaseContext(context);
         return contextChain;
     },
 

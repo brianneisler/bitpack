@@ -5,11 +5,9 @@
 import {
     Class,
     Obj,
-    Proxy,
     Throwables
 } from 'bugcore';
 import generator from 'firebase-token-generator';
-import { ConfigController } from '../controllers';
 
 
 //-------------------------------------------------------------------------------
@@ -31,8 +29,9 @@ const FirebaseTokenGenerator = Class.extend(Obj, {
 
     /**
      * @constructs
+     * @param {string} firebaseSecret
      */
-    _constructor() {
+    _constructor(firebaseSecret) {
 
         this._super();
 
@@ -43,15 +42,28 @@ const FirebaseTokenGenerator = Class.extend(Obj, {
 
         /**
          * @private
+         * @type {string}
+         */
+        this.firebaseSecret     = firebaseSecret;
+
+        /**
+         * @private
          * @type {*}
          */
-        this.tokenGenerator = null;
+        this.tokenGenerator     = null;
     },
 
 
     //-------------------------------------------------------------------------------
     // Getters and Setters
     //-------------------------------------------------------------------------------
+
+    /**
+     * @return {string}
+     */
+    getFirebaseSecret() {
+        return this.firebaseSecret;
+    },
 
     /**
      * @return {*}
@@ -91,51 +103,14 @@ const FirebaseTokenGenerator = Class.extend(Obj, {
      * @private
      */
     generateTokenGenerator() {
-        const firebaseSecret = ConfigController.getProperty('firebaseSecret');
-        if (!firebaseSecret) {
-            throw Throwables.exception('NoFirebaseSecret', {}, 'Assert your firebaseSecret has been set in config');
+        if (!this.tokenGenerator) {
+            if (!this.firebaseSecret) {
+                throw Throwables.exception('NoFirebaseSecret', {}, 'Assert your firebaseSecret has been set in config');
+            }
+            this.tokenGenerator = new generator(this.firebaseSecret);
         }
-        this.tokenGenerator = new generator(firebaseSecret);
     }
 });
-
-
-
-//-------------------------------------------------------------------------------
-// Private Static Properties
-//-------------------------------------------------------------------------------
-
-/**
- * @static
- * @private
- * @type {FirebaseTokenGenerator}
- */
-FirebaseTokenGenerator.instance        = null;
-
-
-//-------------------------------------------------------------------------------
-// Static Methods
-//-------------------------------------------------------------------------------
-
-/**
- * @static
- * @return {FirebaseTokenGenerator}
- */
-FirebaseTokenGenerator.getInstance = function() {
-    if (FirebaseTokenGenerator.instance === null) {
-        FirebaseTokenGenerator.instance = new FirebaseTokenGenerator();
-    }
-    return FirebaseTokenGenerator.instance;
-};
-
-
-//-------------------------------------------------------------------------------
-// Static Proxy
-//-------------------------------------------------------------------------------
-
-Proxy.proxy(FirebaseTokenGenerator, Proxy.method(FirebaseTokenGenerator.getInstance), [
-    'generateDebugTokenWithAuthData'
-]);
 
 
 //-------------------------------------------------------------------------------

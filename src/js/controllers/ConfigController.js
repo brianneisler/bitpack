@@ -80,11 +80,21 @@ const ConfigController = Class.extend(Obj, {
     //-------------------------------------------------------------------------------
 
     /**
-     * @param {ExecContext} context
+     * @param {ContextChain} contextChain
      * @return {ConfigChain}
      */
-    getConfigChain(context) {
-        return this.contextToConfigChainMap.get(context);
+    getConfigChain(contextChain) {
+        const contextKey = this.makeContextKey(contextChain);
+        return this.contextToConfigChainMap.get(contextKey);
+    },
+
+    /**
+     * @param {ContextChain} contextChain
+     * @param {ConfigChain} configChain
+     */
+    setConfigChain(contextChain, configChain) {
+        const contextKey = this.makeContextKey(contextChain);
+        this.contextToConfigChainMap.put(contextKey, configChain);
     },
 
     /**
@@ -93,10 +103,9 @@ const ConfigController = Class.extend(Obj, {
      * @return {*}
      */
     getProperty(contextChain, key) {
-        const context = contextChain.getExecContext();
-        const configChain = this.getConfigChain(context);
+        const configChain = this.getConfigChain(contextChain);
         if (!configChain) {
-            throw Throwables.exception('ConfigNotLoaded', {}, 'Must first load the config before getProperty can be called');
+            throw Throwables.exception('ConfigNotLoaded', {}, 'Must first load the config chain before getProperty can be called');
         }
         return configChain.getProperty(key);
     },
@@ -106,11 +115,10 @@ const ConfigController = Class.extend(Obj, {
      * @return {Promise<PackConfigChain>}
      */
     async loadConfigChain(contextChain) {
-        const context = contextChain.getExecContext();
-        let configChain = this.getConfigChain(context);
+        let configChain = this.getConfigChain(contextChain);
         if (!configChain) {
-            configChain = this.buildConfigChainForContext(context);
-            this.contextToConfigChainMap.put(context, configChain);
+            configChain = await this.buildConfigChainForContextChain(contextChain);
+            this.setConfigChain(contextChain, configChain);
         }
         return configChain;
     },
@@ -202,45 +210,76 @@ const ConfigController = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {ExecContext} context
+     * @param {ContextChain} contextChain
      * @return {PackConfigChain}
      */
-    async buildConfigChainForContext(context) {
-        const execPath      = context.getExecPath();
-        const modulePath    = context.getModulePath();
-        const userPath      = context.getUserPath();
+    async buildConfigChainForContextChain(contextChain) {
+        const context           = contextChain.getExecContext();
+        const execPath          = context.getExecPath();
+        const userPath          = context.getUserPath();
+        const configFileName    = this.getConfigFileName(contextChain);
 
         const configs = await Promises.props({
-            builtIn: PackConfig.loadFromFile(path.resolve(modulePath, 'resources', ConfigController.CONFIG_FILE_NAME), this.getConfigDefaults()),
+            builtIn: new Config(this.getConfigDefaults(contextChain)),
             global: '',
-            project: this.belowTarget(context, 'project') ? null : PackConfig.loadFromFile(path.resolve(execPath, ConfigController.CONFIG_FILE_NAME)),
-            user: this.belowTarget(context, 'user') ? null : PackConfig.loadFromFile(path.resolve(userPath, ConfigController.CONFIG_FILE_NAME)),
+            project: this.belowTarget(context, 'project') ? null : PackConfig.loadFromFile(path.resolve(execPath, configFileName)),
+            user: this.belowTarget(context, 'user') ? null : PackConfig.loadFromFile(path.resolve(userPath, configFileName)),
             override: this.configOverride
         });
         const chain = new PackConfigChain(configs, context.getTarget());
-        configs.global = this.belowTarget(context, 'global') ? null : PackConfig.loadFromFile(path.resolve(chain.getProperty('prefix'), ConfigController.CONFIG_FILE_NAME));
+        configs.global = this.belowTarget(context, 'global') ? null : PackConfig.loadFromFile(path.resolve(chain.getProperty('prefix'), configFileName));
         await Promises.props(configs);
         return new PackConfigChain(configs, context.getTarget());
     },
 
     /**
      * @private
+     * @param {ContextChain} contextChain
      * @return {Object}
      */
-    getConfigDefaults() {
+    getConfigDefaults(contextChain) {
         return _.reduce(ConfigController.BUILT_IN_DEFAULTS, (result, value, key) => {
             return _.assign(result, {
-                [key]: TypeUtil.isString(value) ? this.replaceTokens(value, { home: this.getHomeDir() }) : value
+                [key]: TypeUtil.isString(value) ? this.replaceTokens(value, { home: this.getHomeDir(contextChain), type: this.getPackType(contextChain) }) : value
             });
         }, {});
     },
 
     /**
      * @private
+     * @param {ContextChain} contextChain
      * @return {string}
      */
-    getHomeDir() {
-        return process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
+    getConfigFileName(contextChain) {
+        const packType = this.getPackType(contextChain);
+        return `.${packType}rc`;
+    },
+
+    /**
+     * @private
+     * @param {ContextChain} contextChain
+     * @return {string}
+     */
+    getHomeDir(contextChain) {
+        return contextChain.getExecContext().getUserPath();
+    },
+
+    /**
+     * @private
+     * @param {ContextChain} contextChain
+     * @return {string}
+     */
+    getPackType(contextChain) {
+        return contextChain.getPackTypeContext().getPackType();
+    },
+
+    /**
+     * @private
+     * @param {ContextChain} contextChain
+     * @returns {string}
+     */
+    makeContextKey(contextChain) {
+        return contextChain.getPackTypeContext().toContextKey() + ':' + contextChain.getExecContext().toContextKey();
     },
 
     /**
@@ -269,18 +308,12 @@ const ConfigController = Class.extend(Obj, {
  * @type {{debug: boolean, firebaseUrl: string, prefix: string, serverUrl: string}}
  */
 ConfigController.BUILT_IN_DEFAULTS  = {
-    cache: '{home}/.pack',
+    cache: '{home}/.{type}',
     debug: false,
-    firebaseUrl: 'https://gulp-pack.firebaseio.com',
+    firebaseUrl: 'https://bitpack.firebaseio.com',
     prefix: '/usr/local',
-    serverUrl: 'https://gulppack.com'
+    serverUrl: 'https://gulprecipe.com'
 };
-
-/**
- * @static
- * @const {string}
- */
-ConfigController.CONFIG_FILE_NAME   = '.packrc';
 
 /**
  * @static
@@ -291,47 +324,6 @@ ConfigController.TARGET_WEIGHT = {
     'user': 1,
     'project': 2
 };
-
-
-//-------------------------------------------------------------------------------
-// Private Static Properties
-//-------------------------------------------------------------------------------
-
-/**
- * @static
- * @private
- * @type {ConfigController}
- */
-ConfigController.instance        = null;
-
-
-//-------------------------------------------------------------------------------
-// Static Methods
-//-------------------------------------------------------------------------------
-
-/**
- * @static
- * @return {ConfigController}
- */
-ConfigController.getInstance = function() {
-    if (ConfigController.instance === null) {
-        ConfigController.instance = new ConfigController();
-    }
-    return ConfigController.instance;
-};
-
-
-//-------------------------------------------------------------------------------
-// Static Proxy
-//-------------------------------------------------------------------------------
-
-Proxy.proxy(ConfigController, Proxy.method(ConfigController.getInstance), [
-    'deleteConfigProperty',
-    'getConfigProperty',
-    'loadConfigChain',
-    'setConfigProperty',
-    'updateConfigOverrides'
-]);
 
 
 //-------------------------------------------------------------------------------

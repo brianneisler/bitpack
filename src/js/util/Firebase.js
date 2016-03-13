@@ -12,9 +12,6 @@ import {
     TypeUtil
 } from 'bugcore';
 import firebase from 'Firebase';
-import {
-    ConfigController
-} from '../controllers';
 import Fireproof from './Fireproof';
 
 
@@ -330,7 +327,7 @@ Firebase.isMultiUpdate = function(value) {
  * @return {string}
  */
 Firebase.path = function(contextChain, value) {
-    const firebaseUrl = ConfigController.getProperty(contextChain, 'firebaseUrl').replace(/\/$/, '');
+    const firebaseUrl = contextChain.getFirebaseContext().getFirebaseUrl().replace(/\/$/, '');
     let pathParts = [];
     if (TypeUtil.isString(value)) {
         pathParts = value
